@@ -1,0 +1,152 @@
+import java.util.*;
+
+//大写数字工具类
+public class LzgNumUtil {
+    public static final String ZERO="零";
+    public static final String ONE="壹";
+    public static final String TWO="贰";
+    public static final String THREE="叁";
+    public static final String FOUR="肆";
+    public static final String FIVE="伍";
+    public static final String SIX="陆";
+    public static final String SEVEN="柒";
+    public static final String EIGHT="捌";
+    public static final String NINE="玖";
+    public static final String TEN="拾";
+    public static final String HUNDRED="佰";
+    public static final String THOUSAND="仟";
+    public static final String TEN_THOUSAND="万";
+    public static final String MILLION="亿";
+    
+    //初始化大写数字map
+    public static Map<String,String> NUMBERS=new HashMap<String,String>();
+    static {
+        NUMBERS.put("0",ZERO);
+        NUMBERS.put("1",ONE);
+        NUMBERS.put("2",TWO);
+        NUMBERS.put("3",THREE);
+        NUMBERS.put("4",FOUR);
+        NUMBERS.put("5",FIVE);
+        NUMBERS.put("6",SIX);
+        NUMBERS.put("7",SEVEN);
+        NUMBERS.put("8",EIGHT);
+        NUMBERS.put("9",NINE);
+    }
+    
+    //转成中文大写
+    public  static String upperCase(String number) {
+        
+        String real_number="";
+        String test_number=number;
+        String temp="";
+        String[] number_parts={"","","",""};  //数字的各部分
+        int level_up=3;//控制最大数字为:9999 兆 9999 亿 9999 万 9999
+        while (true){
+            //每次按4位数字截取 1 1 1/2 3 1 5 /4 6 7 8
+            /*1112315/4678
+            * 111/2315
+            * */
+            if(test_number.length()>4){
+                temp=test_number.substring(test_number.length()-4);
+                test_number=test_number.substring(0,test_number.length()-4);
+            }else {
+                temp=test_number;
+                test_number=null;
+            }
+            switch (level_up){
+                case 3:
+                    number_parts[3]=goLevelFunctionByLength(temp);
+                    break;
+                case  2:
+                    //加万单位
+                    number_parts[2]=goLevelFunctionByLength(temp)+TEN_THOUSAND;
+                    break;
+                case 0:
+                    //加亿单位
+                    number_parts[1]=goLevelFunctionByLength(temp)+MILLION;
+                    break;
+            }
+            level_up--;
+            if(test_number==null){
+                break;
+            }
+            
+        }
+        for (int i = 0; i < number_parts.length; i++) {
+            real_number+=number_parts[i];
+        }
+        
+        
+        return real_number;
+    }
+    
+    
+    //两位数
+    private static String level_2(String number){
+        String first=NUMBERS.get(number.substring(0,1));
+        String last=NUMBERS.get(number.substring(1));
+        if ("零".equals(first) && "零".equals(last)){
+            return "";
+        }
+        
+        if ("零".equals(first) && !"零".equals(last)){
+            return last;
+        }
+        
+        if ("壹".equals(first) && "零".equals(last)){
+            return first+TEN;
+        }
+        if("壹".equals(first) && !"零".equals(last)){
+            return TEN+last;
+        }
+        if (!"壹".equals(first)&&!"零".equals(first)&&"零".equals(last)){
+            return first+TEN;
+        }
+        return first+TEN+last;
+    }
+    //三位数
+    private static String level_3(String number){
+        String first=NUMBERS.get(number.substring(0,1));
+        String second=NUMBERS.get(number.substring(1,2));
+        String last=NUMBERS.get(number.substring(2));
+        if ("零".equals(first)&&"零".equals(second)&&"零".equals(last)){
+            return THOUSAND;
+        }
+        if("零".equals(first)&&"零".equals(second)&&!"零".equals(last)){
+            return ZERO+level_2(number.substring(1));
+        }
+        
+        if(!"零".equals(first)&&"零".equals(second)&&!"零".equals(last)){
+            return first+HUNDRED+ZERO+level_2(number.substring(1));
+        }
+        return first+HUNDRED+level_2(number.substring(1));
+    }
+    //四位数  1111/1225/2234
+    private static String level_4(String number){
+        String first=NUMBERS.get(number.substring(0,1));
+        String second=NUMBERS.get(number.substring(1,2));
+        String third=NUMBERS.get(number.substring(2,3));
+        String last=NUMBERS.get(number.substring(3));
+        if("零".equals(first)&&"零".equals(second)&&"零".equals(third)&&"零".equals(last)){
+            return TEN_THOUSAND;
+        }
+        
+        return "零".equals(first)?"":(first+THOUSAND)+level_3(number.substring(1));
+    }
+    
+    //根据长度调用方法
+    private static String goLevelFunctionByLength(String number){
+        int length=number.length();
+        if(length==1){
+            return NUMBERS.get(number);
+        }
+        if(length==2){
+            return level_2(number);
+        }
+        if (length==3){
+            return level_3(number);
+        }
+        return level_4(number);
+    }
+
+}
